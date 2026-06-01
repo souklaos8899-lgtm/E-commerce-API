@@ -1,0 +1,14 @@
+# เริ่มต้น git
+git init
+
+# เพิ่มไฟล์ทั้งหมด
+git add .
+
+# commit
+git commit -m "first commit"
+
+# เชื่อมกับ GitHub
+git remote add origin https://github.com/ชื่อคุณ/my-todo-api.git
+
+# push ขึ้น GitHub
+git push -u origin main

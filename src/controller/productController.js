@@ -82,7 +82,8 @@ const getProductById = asyncHandler(async(req, res, next) => {
 
 
 const createProduct = asyncHandler(async(req, res) => {
-    const products = await Product.create({...req.body, createdBy: req.user.id})
+    const products = await (await Product.create({...req.body, createdBy: req.user.id}))
+        .populate('createBy', 'name email')
 
     res.status(201).json({
         success: true,
