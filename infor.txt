@@ -1,0 +1,147 @@
+📦 Products
+   ✅ CRUD
+   ✅ Search (?search=เสื้อ)
+   ✅ Filter (?category=เสื้อผ้า)
+   ✅ Sort   (?sort=-price)
+   ✅ Pagination (?page=1&limit=10)
+   ✅ Upload รูปสินค้า
+
+🛒 Cart
+   ✅ CRUD ธรรมดา
+   ✅ คำนวณราคารวม
+
+📋 Orders
+   ✅ สร้างออเดอร์จาก Cart
+   ✅ Filter status
+   ✅ อัปเดตสถานะ (admin)
+
+👤 Auth
+   ✅ Register/Login/Me
+   ✅ JWT Token
+   ✅ Role (user/admin)
+
+
+   AUTH:
+POST /api/auth/register   → สมัครสมาชิก
+POST /api/auth/login      → เข้าสู่ระบบ
+GET  /api/auth/me         → ดูโปรไฟล์
+PRODUCTS:
+GET    /api/products          → ดูสินค้าทั้งหมด
+GET    /api/products/:id      → ดูสินค้าชิ้นเดียว
+POST   /api/products          → เพิ่มสินค้า (admin)
+PUT    /api/products/:id      → แก้ไขสินค้า (admin)
+DELETE /api/products/:id      → ลบสินค้า (admin)
+CART:
+GET    /api/cart              → ดูตะกร้า
+POST   /api/cart              → เพิ่มสินค้าในตะกร้า
+PUT    /api/cart/:productId   → แก้ไขจำนวน
+DELETE /api/cart/:productId   → ลบออกจากตะกร้า
+DELETE /api/cart              → ล้างตะกร้า
+ORDERS:
+GET    /api/orders            → ดูออเดอร์ทั้งหมด (admin)
+GET    /api/orders/me         → ดูออเดอร์ของตัวเอง
+GET    /api/orders/:id        → ดูออเดอร์ชิ้นเดียว
+POST   /api/orders            → สร้างออเดอร์
+PUT    /api/orders/:id/status → อัปเดตสถานะ (admin)
+
+
+
+
+
+
+
+
+const removeFields = ['search', 'sort', 'page', 'limit']
+
+removeFields.forEach(field => delete query[field])
+
+// รอบที่ 1: field = 'search'  → delete query['search']
+// รอบที่ 2: field = 'sort'    → delete query['sort']
+// รอบที่ 3: field = 'page'    → delete query['page']
+// รอบที่ 4: field = 'limit'   → delete query['limit']
+
+
+
+
+
+
+
+ความสัมพันธ์ (Relations) ของทุกไฟล์
+┌─────────────────────────────────────────────────────────┐
+│                    E-commerce API                       │
+│                                                         │
+│  index.js                                               │
+│    │                                                    │
+│    ├── middleware/                                      │
+│    │     ├── asyncHandler.js  ← ทุก controller ใช้        │
+│    │     ├── auth.js          ← protect, authorize      │
+│    │     ├── errorHandler.js  ← จัดการ error ทั้งหมด       │
+│    │     ├── ratelimit.js     ← จำกัด request            │
+│    │     └── upload.js        ← multer รับรูปภาพ          │
+│    │                                                    │
+│    ├── models/                                          │
+│    │     ├── User.js     ←───────────────────────────┐  │
+│    │     ├── Product.js  ←──────────────────────┐    │  │
+│    │     ├── Cart.js     ← ใช้ User + Product    │    │  │
+│    │     └── Order.js    ← ใช้ User + Product    │    │  │
+│    │                                            │    │  │
+│    └── controller/                              │    │  │
+│          ├── authController.js    → User ────────────┘  │
+│          ├── productController.js → Product ────────┘   │
+│          ├── cartController.js    → Cart                │
+│          │                          + Product           │
+│          └── orderController.js   → Order               │
+│                                      + Cart             │
+│                                      + Product          │
+└─────────────────────────────────────────────────────────┘
+
+
+
+Relations ระหว่าง Models
+
+User
+ │
+ ├──── Cart (1 user มี 1 cart)
+ │      │
+ │      └── items: [{ product → Product }]
+ │
+ └──── Order (1 user มีหลาย order)
+        │
+        └── items: [{ product → Product }]
+
+
+Product
+ │
+ ├──── Cart.items.product
+ └──── Order.items.product
+
+
+
+
+
+
+
+ Flow การทำงานทั้งหมด
+
+ 1. AUTH
+   register/login → ได้ Token
+        │
+        ▼
+2. PRODUCTS (admin)
+   สร้างสินค้า → เก็บใน MongoDB
+        │
+        ▼
+3. CART (user)
+   addToCart → ดึงข้อมูลจาก Product
+   → เก็บใน Cart.items
+        │
+        ▼
+4. ORDER (user)
+   createOrder → ดึงข้อมูลจาก Cart
+   → สร้าง Order
+   → ลด Product.stock
+   → ล้าง Cart
+        │
+        ▼
+5. STATUS (admin)
+   updateStatus → pending→processing→shipped→delivered
