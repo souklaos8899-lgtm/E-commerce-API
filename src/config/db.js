@@ -1,14 +1,15 @@
 const mongoose = require('mongoose')
 
-const ConnectDB = async() => {
+const connectDB = async() => {
     try{
-        const conn = await mongoose.connect(process.env.MONGO_URI)
-        console.log(`เชื่อมต่อสำเร็จ ${conn.connection.host}`)
 
+        const conn = await mongoose.connect(process.env.MONGO_URI)
+        console.log(`Connect is Success ${conn.connection.host}`)
     }catch(error){
-        console.error('เขื่อมต่อผีดพาด')
+        console.error('Connect is false')
         process.exit(1)
     }
 }
 
-module.exports = ConnectDB
+
+module.exports = connectDB
